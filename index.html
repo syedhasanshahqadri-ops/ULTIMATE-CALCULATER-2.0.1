@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="violet">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Markly — Marks Calculator</title>
+<meta name="description" content="Live marks calculator with grades, GPA, target planner, saved results and PNG report cards.">
+<meta name="theme-color" content="#0c111d" id="themeColor">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Markly">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#" id="brand" aria-label="Markly home"><span class="logo">M</span><span>Markly</span></a>
+    <div class="top-act">
+      <button class="btn install" id="installBtn" type="button">⬇ Install Markly</button>
+      <div class="pop-wrap">
+        <button class="ibtn" id="accentBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Accent color"><span class="dot"></span></button>
+        <div class="pop" id="accentMenu" hidden></div>
+      </div>
+      <button class="ibtn" id="themeBtn" type="button" title="Switch theme" aria-label="Switch theme">☀</button>
+      <button class="btn ghost" id="accountBtn" type="button">Sign in</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 1. Name + count -->
+  <section id="viewName" class="view">
+    <div class="wrap two">
+      <div class="intro">
+        <h1>Type your marks. Watch your percentage move.</h1>
+        <p>Up to 30 subjects with live percentage, grades, GPA and a target planner. Download a report card as PNG in the style you like.</p>
+        <ul class="ticks">
+          <li>Works offline after install</li>
+          <li>Saves on this device, or to your account</li>
+          <li>10 report card styles</li>
+        </ul>
+      </div>
+      <div class="card setup">
+        <h2>Start a new result</h2>
+        <label class="lbl" for="studentName">Your name</label>
+        <input class="inp" id="studentName" maxlength="50" autocomplete="name" placeholder="e.g. Hasan">
+        <label class="lbl" for="subjectCount">Number of subjects (1–30)</label>
+        <input class="inp" id="subjectCount" type="number" min="1" max="30" value="7" inputmode="numeric">
+        <button class="btn primary full" id="continueBtn" type="button">Set up subjects</button>
+        <button class="btn ghost full" id="resumeBtn" type="button" hidden>Open my current dashboard</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Subjects setup -->
+  <section id="viewSubjects" class="view" hidden>
+    <div class="wrap narrow">
+      <div class="card setup">
+        <h2>Name your subjects</h2>
+        <p class="muted">Add each subject with its maximum marks.</p>
+        <div id="subjectInputs" class="sub-inputs"></div>
+        <button class="btn primary full" id="createBtn" type="button">Create dashboard</button>
+        <div class="two-btn">
+          <button class="btn ghost" id="backBtn" type="button">Back</button>
+          <button class="btn ghost" id="homeBtn2" type="button">Home</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Dashboard -->
+  <section id="viewDash" class="view" hidden>
+    <div class="wrap">
+      <div class="dash-head">
+        <div>
+          <button class="link" id="homeBtn3" type="button">← Home</button>
+          <h2 id="dashTitle">Your results</h2>
+        </div>
+        <div class="acts">
+          <button class="btn ghost" id="editBtn" type="button">✎ Edit subjects</button>
+          <button class="btn ghost" id="saveBtn" type="button">♡ Save result</button>
+          <button class="btn primary" id="pngBtn" type="button">↓ Download PNG</button>
+          <button class="btn ghost" id="moreBtn" type="button" aria-haspopup="true">⋯ More</button>
+        </div>
+      </div>
+      <div class="more" id="moreMenu" hidden>
+        <button type="button" data-act="copy">Copy summary</button>
+        <button type="button" data-act="csv">Export CSV</button>
+        <button type="button" data-act="json">Export JSON</button>
+        <button type="button" data-act="import">Import JSON</button>
+        <button type="button" data-act="print">Print</button>
+        <button type="button" data-act="reset">Reset all marks</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><span>Total obtained</span><b id="kObt">0</b><small id="kMax">out of 0</small></div>
+        <div class="kpi"><span>Percentage</span><b id="kPct">0.00%</b><small id="kPass">—</small></div>
+        <div class="kpi"><span>Grade</span><b id="kGrade">F</b><small id="kGpa">GPA 0.00</small></div>
+        <div class="kpi"><span>Average per subject</span><b id="kAvg">0</b><small id="kBest">—</small></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="main">
+          <div class="tabs" role="tablist">
+            <button role="tab" class="tab on" data-tab="marks" aria-selected="true">Marks</button>
+            <button role="tab" class="tab" data-tab="insights" aria-selected="false">Insights</button>
+            <button role="tab" class="tab" data-tab="saved" aria-selected="false">Saved results <span class="count" id="savedCount">0</span></button>
+          </div>
+
+          <div id="tab-marks" class="panel-tab">
+            <div class="toolbar">
+              <button class="btn small ghost" id="sortBtn" type="button">Sort: original</button>
+              <div class="fill"><label for="fillPct" class="muted">Set all to</label><input class="inp tiny" id="fillPct" type="number" min="0" max="100" value="75"><span class="muted">%</span><button class="btn small ghost" id="fillBtn" type="button">Apply</button></div>
+              <button class="btn small ghost" id="addBtn" type="button">+ Add subject</button>
+            </div>
+            <div id="rows" class="rows"></div>
+            <p class="muted small-note">Tip: drag the slider, or type marks directly. Name and maximum marks can be edited in place.</p>
+          </div>
+
+          <div id="tab-insights" class="panel-tab" hidden></div>
+
+          <div id="tab-saved" class="panel-tab" hidden>
+            <div class="toolbar">
+              <input class="inp" id="saveSearch" type="search" placeholder="Search saved results">
+              <span class="badge" id="cloudBadge">On this device</span>
+            </div>
+            <div id="savedList"></div>
+          </div>
+        </div>
+
+        <aside class="card side">
+          <h3>Overall progress</h3>
+          <div class="ring-wrap"><div class="ring" id="ring"><div><b id="ringPct">0%</b><small>of total marks</small></div></div></div>
+          <dl class="lines">
+            <div><dt>Subjects</dt><dd id="sSub">0</dd></div>
+            <div><dt>Marks scored</dt><dd id="sGot">0</dd></div>
+            <div><dt>Marks remaining</dt><dd id="sLeft">0</dd></div>
+            <div class="tot"><dt>Maximum marks</dt><dd id="sMax">0</dd></div>
+          </dl>
+          <p class="muted small-note">Percentage = total obtained ÷ total maximum × 100</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">Markly · Your marks, made simple</footer>
+
+<!-- Save dialog -->
+<dialog id="saveDlg">
+  <form method="dialog" class="dlg" id="saveForm">
+    <h3>Save this result</h3>
+    <p class="muted">Give it a name. The date is added automatically.</p>
+    <input class="inp" id="saveName" maxlength="80" placeholder="e.g. Mid-term 2026">
+    <p class="muted small-note" id="saveWhere"></p>
+    <div class="dlg-act">
+      <button class="btn ghost" value="cancel" type="button" data-close>Cancel</button>
+      <button class="btn ghost" id="updateSaveBtn" type="button" hidden>Update existing</button>
+      <button class="btn primary" id="confirmSave" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Account dialog -->
+<dialog id="accountDlg">
+  <div class="dlg">
+    <div id="authOut">
+      <h3>Sign in to Markly</h3>
+      <p class="muted">Sign in with your email to keep your results in your account. No account? Results are saved on this device with a date and a name.</p>
+      <div class="seg"><button class="on" data-mode="login" type="button">Sign in</button><button data-mode="register" type="button">Create account</button></div>
+      <label class="lbl" for="authEmail">Email</label>
+      <input class="inp" id="authEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      <label class="lbl" for="authPass">Password (min 6 characters)</label>
+      <input class="inp" id="authPass" type="password" autocomplete="current-password">
+      <p class="err" id="authErr" role="alert"></p>
+      <div class="dlg-act">
+        <button class="btn ghost" type="button" data-close>Continue as guest</button>
+        <button class="btn primary" id="authGo" type="button">Sign in</button>
+      </div>
+    </div>
+    <div id="authIn" hidden>
+      <h3>Your account</h3>
+      <p>Signed in as <b id="authWho"></b></p>
+      <p class="muted">New results you save are also stored in your account.</p>
+      <div class="dlg-act">
+        <button class="btn ghost" type="button" data-close>Close</button>
+        <button class="btn primary" id="signOutBtn" type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Template picker -->
+<dialog id="tplDlg" class="wide">
+  <div class="dlg">
+    <div class="dlg-head"><div><h3>Choose a report style</h3><p class="muted">Tap a style and your PNG downloads right away.</p></div><button class="ibtn" type="button" data-close aria-label="Close">✕</button></div>
+    <div class="tpl-grid" id="tplGrid"></div>
+  </div>
+</dialog>
+
+<!-- Install help -->
+<dialog id="installDlg">
+  <div class="dlg">
+    <h3>Install Markly</h3>
+    <p class="muted" id="installLead">Add Markly to your device so it opens like an app, even offline.</p>
+    <div class="how" id="how-ios"><b>iPhone / iPad (Safari)</b><ol><li>Tap the Share button.</li><li>Choose “Add to Home Screen”.</li><li>Tap “Add”.</li></ol></div>
+    <div class="how" id="how-android"><b>Android (Chrome)</b><ol><li>Tap the ⋮ menu.</li><li>Choose “Install app” or “Add to Home screen”.</li><li>Confirm.</li></ol></div>
+    <div class="how" id="how-pc"><b>Windows / Mac / Linux (Chrome or Edge)</b><ol><li>Click the install icon at the right of the address bar.</li><li>Or open ⋮ menu → “Install Markly”.</li></ol></div>
+    <p class="muted small-note">Installing needs the site to be opened over https (or localhost).</p>
+    <div class="dlg-act"><button class="btn primary" type="button" data-close>Got it</button></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="report.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
